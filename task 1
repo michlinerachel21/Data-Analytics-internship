@@ -1,0 +1,27 @@
+pyspark.sql import SparkSession
+from pyspark.sql.functions import col, count
+
+# Start Spark session
+spark = SparkSession.builder.appName("NetflixBigDataAnalysis").getOrCreate()
+from
+# Load CSV data
+df = spark.read.csv("netflix_titles.csv", header=True, inferSchema=True)
+
+# Drop rows with missing type or country
+df_clean = df.dropna(subset=["type", "country"])
+
+# 1. Count of Movies vs TV Shows
+df_clean.groupBy("type").agg(count("*").alias("Count")).show()
+
+# 2. Top 10 Countries by Content Count
+df_clean.groupBy("country").agg(count("*").alias("TotalContent")) \
+    .orderBy(col("TotalContent").desc()).show(10)
+
+# 3. Year-wise trend
+df_year = df_clean.filter(df_clean["release_year"].isNotNull()) \
+    .groupBy("release_year", "type").agg(count("*").alias("count")) \
+    .orderBy("release_year")
+df_year.show()
+
+# Stop Spark session
+spark.stop()
