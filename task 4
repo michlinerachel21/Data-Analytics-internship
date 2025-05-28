@@ -1,0 +1,44 @@
+import pandas as pd
+import matplotlib.pyplot as plt
+from wordcloud import WordCloud
+import nltk
+import string
+
+# Download stopwords
+nltk.download('stopwords')
+from nltk.corpus import stopwords
+stop_words = set(stopwords.words('english'))
+
+# Load dataset
+df = pd.read_csv("netflix_titles.csv")
+df = df.dropna(subset=['description', 'type'])
+
+# Clean text
+def clean_text(text):
+    text = text.lower()
+    text = ''.join([c for c in text if c not in string.punctuation])
+    words = text.split()
+    words = [word for word in words if word not in stop_words]
+    return " ".join(words)
+
+df['clean_description'] = df['description'].apply(clean_text)
+
+# Generate text for each type
+movie_text = " ".join(df[df['type'] == 'Movie']['clean_description'].head(1000))
+tv_text = " ".join(df[df['type'] == 'TV Show']['clean_description'].head(1000))
+
+# Create WordClouds
+plt.figure(figsize=(14, 6))
+
+plt.subplot(1, 2, 1)
+plt.imshow(WordCloud(width=800, height=400, background_color='white').generate(movie_text))
+plt.title("Movies - Common Words")
+plt.axis('off')
+
+plt.subplot(1, 2, 2)
+plt.imshow(WordCloud(width=800, height=400, background_color='white').generate(tv_text))
+plt.title("TV Shows - Common Words")
+plt.axis('off')
+
+plt.tight_layout()
+plt.show()
